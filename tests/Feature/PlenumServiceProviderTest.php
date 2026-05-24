@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Routing\Router;
 use Vented\Plenum\Contracts\ConnectionDriver;
 use Vented\Plenum\Contracts\HealthChecker;
@@ -14,6 +15,7 @@ use Vented\Plenum\Exceptions\ConfigurationException;
 use Vented\Plenum\Health\PingHealthChecker;
 use Vented\Plenum\Middleware\RouteRequest;
 use Vented\Plenum\Plenum;
+use Vented\Plenum\PlenumServiceProvider;
 use Vented\Plenum\Strategies\AuthUserStrategy;
 use Vented\Plenum\Strategies\SessionOnlyStrategy;
 
@@ -244,6 +246,42 @@ it('pushes the RouteRequest middleware onto each configured group by default', f
 
     expect($router->getMiddlewareGroups()['web'] ?? [])->toContain(RouteRequest::class)
         ->and($router->getMiddlewareGroups()['api'] ?? [])->toContain(RouteRequest::class);
+});
+
+function invokeMaybeRegisterMiddleware(Container $app): void
+{
+    $provider = $app->getProvider(PlenumServiceProvider::class);
+    $method = new ReflectionMethod($provider, 'maybeRegisterMiddleware');
+    $method->invoke($provider);
+}
+
+it('maybeRegisterMiddleware returns early when auto_register is false', function () {
+    setPlenumConfig($this->app, ['plenum.middleware.auto_register' => false]);
+
+    $router = $this->app->make(Router::class);
+    $before = $router->getMiddlewareGroups();
+
+    // Invoking again should hit the early-return branch and leave routes untouched.
+    invokeMaybeRegisterMiddleware($this->app);
+
+    expect($router->getMiddlewareGroups())->toBe($before);
+});
+
+it('maybeRegisterMiddleware returns early when no HTTP Kernel is bound', function () {
+    setPlenumConfig($this->app, ['plenum.middleware.auto_register' => true]);
+
+    // Forget the kernel binding so the second guard branch is exercised.
+    $this->app->forgetInstance(HttpKernel::class);
+    unset($this->app[HttpKernel::class]);
+    $this->app->bind(HttpKernel::class, fn () => throw new RuntimeException('should not be resolved'));
+    $this->app->offsetUnset(HttpKernel::class);
+
+    $router = $this->app->make(Router::class);
+    $before = $router->getMiddlewareGroups();
+
+    invokeMaybeRegisterMiddleware($this->app);
+
+    expect($router->getMiddlewareGroups())->toBe($before);
 });
 
 it('produces a usable plenum singleton with realistic configuration', function () {

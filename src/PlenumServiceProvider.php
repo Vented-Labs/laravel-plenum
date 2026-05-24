@@ -6,6 +6,7 @@ namespace Vented\Plenum;
 
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
@@ -50,6 +51,9 @@ class PlenumServiceProvider extends PackageServiceProvider
         $this->registerPlenum();
     }
 
+    /**
+     * @throws BindingResolutionException
+     */
     public function packageBooted(): void
     {
         $this->maybeRegisterMiddleware();
@@ -215,7 +219,7 @@ class PlenumServiceProvider extends PackageServiceProvider
     }
 
     /**
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @throws BindingResolutionException
      */
     private function maybeRegisterMiddleware(): void
     {
