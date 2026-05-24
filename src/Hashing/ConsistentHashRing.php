@@ -53,7 +53,24 @@ final class ConsistentHashRing implements HashRing
             return [];
         }
 
-        return $this->ring->lookupList((string) $key, $count);
+        // esi/consistent-hash's lookupList walks N ring positions but doesn't guarantee
+        // N distinct targets when consecutive positions happen to belong to the same
+        // target's replicas. Iterate over progressively smaller rings so each pick is
+        // guaranteed unique — cheap for the small N we use (failover candidates).
+        $remaining = $this->nodes;
+        $stringKey = (string) $key;
+        $picks = [];
+        $limit = min($count, count($remaining));
+
+        while (count($picks) < $limit) {
+            $ring = $this->makeRing();
+            $ring->addTargets($remaining);
+            $picked = $ring->lookup($stringKey);
+            $picks[] = $picked;
+            $remaining = array_values(array_filter($remaining, static fn (string $n): bool => $n !== $picked));
+        }
+
+        return $picks;
     }
 
     public function nodes(): array

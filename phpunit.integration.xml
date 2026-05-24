@@ -15,14 +15,8 @@
     backupStaticProperties="false"
 >
     <testsuites>
-        <testsuite name="Plenum Test Suite">
-            <directory>tests</directory>
-            <exclude>tests/Integration</exclude>
+        <testsuite name="Plenum Integration Suite">
+            <directory>tests/Integration</directory>
         </testsuite>
     </testsuites>
-    <source>
-        <include>
-            <directory suffix=".php">./src</directory>
-        </include>
-    </source>
 </phpunit>

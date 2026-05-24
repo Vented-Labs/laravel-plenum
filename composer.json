@@ -62,6 +62,7 @@
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage --min=100",
+        "test:integration": "vendor/bin/pest --configuration phpunit.integration.xml",
         "format": "vendor/bin/php-cs-fixer fix"
     },
     "extra": {

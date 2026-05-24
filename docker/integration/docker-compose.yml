@@ -1,0 +1,57 @@
+name: plenum-integration
+
+services:
+
+  mysql_1:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: plenum
+      MYSQL_DATABASE: plenum_test
+    ports:
+      - "33061:3306"
+    volumes:
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pplenum"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  mysql_2:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: plenum
+      MYSQL_DATABASE: plenum_test
+    ports:
+      - "33062:3306"
+    volumes:
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pplenum"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  valkey_1:
+    image: valkey/valkey:8
+    ports:
+      - "63791:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 2s
+
+  valkey_2:
+    image: valkey/valkey:8
+    ports:
+      - "63792:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+      start_period: 2s

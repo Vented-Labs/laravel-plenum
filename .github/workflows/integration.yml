@@ -1,0 +1,59 @@
+name: integration
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'tests/Integration/**'
+      - 'docker/integration/**'
+      - 'phpunit.integration.xml'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/integration.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/Integration/**'
+      - 'docker/integration/**'
+      - 'phpunit.integration.xml'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/integration.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, sqlite, pdo_sqlite, bcmath, intl, fileinfo, hash, redis
+          coverage: none
+
+      - name: Install composer dependencies
+        uses: ramsey/composer-install@v4
+
+      - name: Start backend services
+        run: docker compose -f docker/integration/docker-compose.yml up -d --wait
+
+      - name: Run integration tests
+        run: composer test:integration
+
+      - name: Dump compose logs on failure
+        if: failure()
+        run: docker compose -f docker/integration/docker-compose.yml logs --tail=200
+
+      - name: Tear down compose
+        if: always()
+        run: docker compose -f docker/integration/docker-compose.yml down -v
