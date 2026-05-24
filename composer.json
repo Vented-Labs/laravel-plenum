@@ -28,6 +28,7 @@
     "require": {
         "php": "^8.5",
         "ext-hash": "*",
+        "ext-pdo": "*",
         "esi/consistent-hash": "^2.0",
         "illuminate/contracts": "^13.0",
         "illuminate/database": "^13.0",
