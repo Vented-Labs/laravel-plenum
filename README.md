@@ -15,7 +15,7 @@ Load-balancer sticky sessions don't solve this: the same user on two devices nee
 
 ## Requirements
 
-- PHP 8.5+
+- PHP 8.3+
 - Laravel 13+
 - A cache store (used to share health state across workers)
 
