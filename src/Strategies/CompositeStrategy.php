@@ -13,7 +13,7 @@ final class CompositeStrategy implements RoutingStrategy
 
     public function __construct(RoutingStrategy ...$strategies)
     {
-        $this->strategies = $strategies;
+        $this->strategies = array_values($strategies);
     }
 
     public function resolve(): int|string|null

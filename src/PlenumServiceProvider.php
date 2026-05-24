@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vented\Plenum;
 
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -11,6 +12,8 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Contracts\Redis\Factory as RedisFactory;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Routing\Router;
 use Spatie\LaravelPackageTools\Package;
@@ -78,10 +81,10 @@ class PlenumServiceProvider extends PackageServiceProvider
 
     private function registerStrategyAliases(): void
     {
-        $this->app->singleton(AuthUserStrategy::class, fn (Application $app) => new AuthUserStrategy($app['auth']));
+        $this->app->singleton(AuthUserStrategy::class, fn (Application $app) => new AuthUserStrategy($app->make(AuthFactory::class)));
         $this->app->alias(AuthUserStrategy::class, 'plenum.strategy.auth-user');
 
-        $this->app->singleton(SessionOnlyStrategy::class, fn (Application $app) => new SessionOnlyStrategy($app['session.store']));
+        $this->app->singleton(SessionOnlyStrategy::class, fn (Application $app) => new SessionOnlyStrategy($app->make(Session::class)));
         $this->app->alias(SessionOnlyStrategy::class, 'plenum.strategy.session');
     }
 
@@ -135,7 +138,7 @@ class PlenumServiceProvider extends PackageServiceProvider
             $drivers[] = new DatabaseDriver(
                 db: $app->make(DatabaseManager::class),
                 config: $config,
-                nodes: array_keys($databaseConfig['nodes']),
+                nodes: array_map('strval', array_keys($databaseConfig['nodes'])),
             );
         }
 
@@ -143,9 +146,9 @@ class PlenumServiceProvider extends PackageServiceProvider
         if ($this->shouldRegister('redis', $redisConfig)) {
             $this->registerRedisConnections($config, $redisConfig);
             $drivers[] = new RedisDriver(
-                redis: $app->make('redis'),
+                redis: $app->make(RedisFactory::class),
                 container: $app,
-                nodes: array_keys($redisConfig['nodes']),
+                nodes: array_map('strval', array_keys($redisConfig['nodes'])),
             );
         }
 

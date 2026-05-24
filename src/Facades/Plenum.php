@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Vented\Plenum\Facades;
 
-use Illuminate\Contracts\Redis\Connection;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
+use Illuminate\Redis\Connections\Connection;
 use Illuminate\Support\Facades\Facade;
 use RuntimeException;
 use Vented\Plenum\Drivers\RedisDriver;

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Illuminate\Contracts\Redis\Connection as RedisConnection;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
+use Illuminate\Redis\Connections\Connection as RedisConnection;
 use Vented\Plenum\Drivers\RedisDriver;
 use Vented\Plenum\Facades\Plenum;
 use Vented\Plenum\Plenum as PlenumCore;

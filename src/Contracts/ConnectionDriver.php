@@ -40,7 +40,11 @@ interface ConnectionDriver
      * The router's failover-aware execute() catches these and retries on the
      * next healthy candidate.
      *
-     * @return array<int, class-string<Throwable>>
+     * Entries may be plain strings rather than ::class FQNs so drivers can
+     * declare exceptions from optional client libraries (e.g. phpredis vs.
+     * predis) without requiring both to be installed.
+     *
+     * @return array<int, class-string<Throwable>|string>
      */
     public function failoverExceptions(): array;
 }

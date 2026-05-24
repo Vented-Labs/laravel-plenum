@@ -17,8 +17,8 @@ class ProbeCommand extends Command
 
     protected $description = 'Probe every configured node and update the shared health cache.';
 
-    /** @var callable(int): void */
-    public static $sleeper;
+    /** @var (callable(int): void)|null */
+    public static $sleeper = null;
 
     public function handle(Plenum $plenum, HealthChecker $health): int
     {
