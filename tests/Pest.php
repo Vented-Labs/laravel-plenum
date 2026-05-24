@@ -1,5 +1,9 @@
 <?php
 
-use VendorName\Skeleton\Tests\TestCase;
+declare(strict_types=1);
 
-uses(TestCase::class)->in(__DIR__);
+use Vented\Plenum\Tests\Integration\IntegrationCase;
+use Vented\Plenum\Tests\TestCase;
+
+uses(TestCase::class)->in('Feature', 'Unit');
+uses(IntegrationCase::class)->in('Integration');

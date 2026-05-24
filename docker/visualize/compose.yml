@@ -1,0 +1,27 @@
+name: plenum-visualize
+
+services:
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    entrypoint: ["/app/docker/visualize/entrypoint.sh"]
+    volumes:
+      - ../..:/app:cached
+    ports:
+      - "8000:8000"
+    environment:
+      APP_KEY: base64:JG5uEJxTjsnCK31Apixw8J9KqMnAQYiDrVL0lwR58GY=
+      APP_ENV: local
+      APP_DEBUG: "true"
+      CACHE_STORE: file
+      SESSION_DRIVER: array
+
+      PLENUM_DASHBOARD_ENABLED: "true"
+      PLENUM_STRATEGY: auth-user
+      PLENUM_DB_NODES: "db_1=db-1.internal:5432,db_2=db-2.internal:5432,db_3=db-3.internal:5432"
+      PLENUM_REDIS_NODES: "redis_1=redis-1.internal:6379,redis_2=redis-2.internal:6379"
+
+      PLENUM_VISUALIZE_SEED: "1"

@@ -12,6 +12,7 @@ yarn-error.log
 # Caches
 .phpunit.cache
 .phpunit.result.cache
+.php-cs-fixer.cache
 /build
 
 # IDE Helper
@@ -30,3 +31,5 @@ phpstan.neon
 testbench.yaml
 /docs
 /coverage
+/storage
+/.phpunit.cache

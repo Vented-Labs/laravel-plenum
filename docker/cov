@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Run pest with coverage inside a PHP 8.5 + xdebug container.
+# Usage:
+#   ./docker/cov                       # full coverage
+#   ./docker/cov tests/Unit            # subset
+#   ./docker/cov --min=100             # any pest args
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+IMAGE="laravel-plenum-coverage:php8.5"
+
+if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    echo "Building coverage image ($IMAGE) ..."
+    docker build -t "$IMAGE" -f "$REPO_ROOT/docker/coverage.Dockerfile" "$REPO_ROOT/docker"
+fi
+
+exec docker run --rm \
+    -v "$REPO_ROOT":/app \
+    -w /app \
+    "$IMAGE" \
+    vendor/bin/pest --coverage "$@"
