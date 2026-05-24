@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Vented\Plenum\Contracts\HealthChecker;
 use Vented\Plenum\Plenum;
 
-class ProbeCommand extends Command
+final class ProbeCommand extends Command
 {
     protected $signature = 'plenum:probe
         {--watch : Run continuously until killed}

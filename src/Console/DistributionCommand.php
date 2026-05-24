@@ -9,7 +9,7 @@ use Throwable;
 use Vented\Plenum\Contracts\ConnectionDriver;
 use Vented\Plenum\Plenum;
 
-class DistributionCommand extends Command
+final class DistributionCommand extends Command
 {
     protected $signature = 'plenum:distribution
         {driver? : Restrict to a single driver}

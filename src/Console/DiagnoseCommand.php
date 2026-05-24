@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 use Vented\Plenum\Contracts\HealthChecker;
 use Vented\Plenum\Plenum;
 
-class DiagnoseCommand extends Command
+final class DiagnoseCommand extends Command
 {
     protected $signature = 'plenum:diagnose';
 
