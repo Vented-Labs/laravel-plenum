@@ -1,8 +1,5 @@
 # Laravel Plenum
 
-> [!WARNING]
-> **Experimental — not for production use.** Laravel Plenum is at `0.1.0` and the API, configuration keys, and runtime behaviour may change without notice between point releases. Health-check semantics, event payloads, and the hashing implementation are not yet stable. Please evaluate in development or staging environments only until a `1.0` release is tagged.
-
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/vented/laravel-plenum.svg?style=flat-square)](https://packagist.org/packages/vented/laravel-plenum)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/Vented-Labs/laravel-plenum/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/Vented-Labs/laravel-plenum/actions?query=workflow%3Atests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/Vented-Labs/laravel-plenum/php-cs-fixer.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/Vented-Labs/laravel-plenum/actions?query=workflow%3A"php-cs-fixer"+branch%3Amain)
@@ -13,6 +10,9 @@ Application-layer routing for Laravel. Pin requests to specific backing connecti
 <p align="center">
     <img src="art/dashboard.png" alt="Plenum dashboard showing per-driver node health and key distribution, with light mode on the left and dark mode on the right." width="100%">
 </p>
+
+> [!WARNING]
+> **Experimental — not for production use.** Laravel Plenum is at `0.1.0` and the API, configuration keys, and runtime behaviour may change without notice between point releases. Health-check semantics, event payloads, and the hashing implementation are not yet stable. Please evaluate in development or staging environments only until a `1.0` release is tagged.
 
 ## What and why
 
@@ -82,7 +82,7 @@ A strategy answers one question: *given the current request, what's the routing 
 - `callback` — a closure registered at boot time, with a custom name for the `X-Plenum-Strategy` header
 - `composite` — tries strategies in order until one returns a non-null key
 
-To get the README's original "auth, falling back to session" behaviour, bind a composite:
+For example, to route by authenticated user and fall back to the session for guests, bind a composite:
 
 ```php
 use Vented\Plenum\Contracts\RoutingStrategy;
