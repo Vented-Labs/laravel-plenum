@@ -1,5 +1,8 @@
 # Laravel Plenum
 
+> [!WARNING]
+> **Experimental — not for production use.** Laravel Plenum is at `0.1.0` and the API, configuration keys, and runtime behaviour may change without notice between point releases. Health-check semantics, event payloads, and the hashing implementation are not yet stable. Please evaluate in development or staging environments only until a `1.0` release is tagged.
+
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/vented/laravel-plenum.svg?style=flat-square)](https://packagist.org/packages/vented/laravel-plenum)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/Vented-Labs/laravel-plenum/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/Vented-Labs/laravel-plenum/actions?query=workflow%3Atests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/Vented-Labs/laravel-plenum/php-cs-fixer.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/Vented-Labs/laravel-plenum/actions?query=workflow%3A"php-cs-fixer"+branch%3Amain)
