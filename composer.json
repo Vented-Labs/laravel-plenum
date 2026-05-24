@@ -1,13 +1,23 @@
 {
-    "name": "vented-labs/laravel-plenum",
+    "name": "vented/laravel-plenum",
     "description": "Application-layer routing for Laravel. Pin requests to specific backing connections (database, Redis, custom) using consistent hashing, pluggable routing strategies, active health checks, and automatic failover.",
     "keywords": [
-        "Vented-Labs",
         "laravel",
-        "laravel-plenum"
+        "consistent-hashing",
+        "routing",
+        "ha",
+        "multi-master",
+        "sharding",
+        "redis",
+        "postgres"
     ],
-    "homepage": "https://github.com/vented-labs/laravel-plenum",
     "license": "MIT",
+    "type": "library",
+    "homepage": "https://github.com/Vented-Labs/laravel-plenum",
+    "support": {
+        "issues": "https://github.com/Vented-Labs/laravel-plenum/issues",
+        "source": "https://github.com/Vented-Labs/laravel-plenum"
+    },
     "authors": [
         {
             "name": "Mason Curry",
@@ -16,21 +26,24 @@
         }
     ],
     "require": {
-        "php": "^8.4",
-        "spatie/laravel-package-tools": "^1.16",
-        "illuminate/contracts": "^11.0||^12.0||^13.0"
+        "php": "^8.5",
+        "ext-hash": "*",
+        "esi/consistent-hash": "^2.0",
+        "illuminate/contracts": "^13.0",
+        "illuminate/database": "^13.0",
+        "illuminate/redis": "^13.0",
+        "illuminate/support": "^13.0",
+        "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
-        "laravel/pint": "^1.14",
-        "nunomaduro/collision": "^8.8",
+        "friendsofphp/php-cs-fixer": "^3.88",
         "larastan/larastan": "^3.0",
-        "orchestra/testbench": "^11.0.0||^10.0.0||^9.0.0",
+        "nunomaduro/collision": "^8.8",
+        "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-arch": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
         "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.0"
+        "phpstan/phpstan": "^2.1"
     },
     "autoload": {
         "psr-4": {
@@ -47,15 +60,8 @@
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage",
-        "format": "vendor/bin/pint"
-    },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "phpstan/extension-installer": true
-        }
+        "test-coverage": "vendor/bin/pest --coverage --min=100",
+        "format": "vendor/bin/php-cs-fixer fix"
     },
     "extra": {
         "laravel": {
@@ -67,6 +73,13 @@
             }
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    }
 }
