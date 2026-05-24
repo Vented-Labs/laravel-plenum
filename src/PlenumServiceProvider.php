@@ -14,6 +14,9 @@ use Illuminate\Database\DatabaseManager;
 use Illuminate\Routing\Router;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Vented\Plenum\Console\DiagnoseCommand;
+use Vented\Plenum\Console\DistributionCommand;
+use Vented\Plenum\Console\ProbeCommand;
 use Vented\Plenum\Contracts\ConnectionDriver;
 use Vented\Plenum\Contracts\HealthChecker;
 use Vented\Plenum\Contracts\RoutingStrategy;
@@ -29,7 +32,14 @@ class PlenumServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        $package->name('laravel-plenum')->hasConfigFile();
+        $package
+            ->name('laravel-plenum')
+            ->hasConfigFile()
+            ->hasCommands([
+                DiagnoseCommand::class,
+                DistributionCommand::class,
+                ProbeCommand::class,
+            ]);
     }
 
     public function packageRegistered(): void
