@@ -242,7 +242,7 @@ PLENUM_DASHBOARD_DOMAIN=admin.example.com # optional
 PLENUM_DASHBOARD_SAMPLES=1000             # distribution sample count
 ```
 
-The page ships its own bundled stylesheet inline — no asset publishing required. If you want to theme it, publish the view and edit it directly:
+The page ships its own bundled stylesheet inline. If you want to theme it, publish the view and edit it directly:
 
 ```bash
 php artisan vendor:publish --tag="plenum-views"
