@@ -30,6 +30,13 @@ final class ConsistentHashRing implements HashRing
         $unique = array_values(array_unique($nodes));
         sort($unique);
 
+        // Under Octane the healthy-node set is stable across most requests;
+        // rebuilding the ring on every call costs `replicas_per_node × N`
+        // hash positions for nothing. Skip when the input matches state.
+        if ($unique === $this->nodes) {
+            return;
+        }
+
         $this->nodes = $unique;
         $this->ring = $this->makeRing();
 

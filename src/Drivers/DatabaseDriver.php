@@ -15,6 +15,8 @@ final class DatabaseDriver implements ConnectionDriver
     /** @var array<int, string> */
     private readonly array $nodes;
 
+    private readonly ?string $originalDefault;
+
     /**
      * @param  array<int, string>  $nodes
      */
@@ -25,6 +27,12 @@ final class DatabaseDriver implements ConnectionDriver
         private readonly string $name = 'database',
     ) {
         $this->nodes = array_values($nodes);
+
+        // Snapshot the configured default at boot so deactivate() can restore
+        // it. Reading it later (e.g. inside deactivate) would risk capturing a
+        // value Plenum itself wrote in an earlier request on the same worker.
+        $default = $this->config->get('database.default');
+        $this->originalDefault = is_string($default) && $default !== '' ? $default : null;
     }
 
     public function name(): string
@@ -41,6 +49,15 @@ final class DatabaseDriver implements ConnectionDriver
     {
         $this->db->setDefaultConnection($node);
         $this->config->set('database.default', $node);
+    }
+
+    public function deactivate(): void
+    {
+        if ($this->originalDefault !== null) {
+            $this->db->setDefaultConnection($this->originalDefault);
+        }
+
+        $this->config->set('database.default', $this->originalDefault);
     }
 
     public function ping(string $node): bool

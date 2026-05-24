@@ -24,7 +24,7 @@ final class Plenum
     private array $rings = [];
 
     public function __construct(
-        private RoutingStrategy $strategy,
+        private readonly RoutingStrategy $strategy,
         private readonly HealthChecker $health,
         private readonly Dispatcher $events,
         private readonly int $hashReplicasPerNode = 64,
@@ -60,20 +60,25 @@ final class Plenum
         return $this->strategy;
     }
 
-    public function setStrategy(RoutingStrategy $strategy): self
-    {
-        $this->strategy = $strategy;
-
-        return $this;
-    }
-
     /**
      * Resolve the strategy key and activate the matching node on each driver.
+     *
+     * Every registered driver is deactivated first so the routing decision is
+     * hermetic — under long-lived workers (Octane/FrankenPHP/RoadRunner) we
+     * don't carry the previous request's pinned connection into this one.
      *
      * @return array<string, string>
      */
     public function routeCurrentRequest(): array
     {
+        foreach ($this->drivers as $driver) {
+            try {
+                $driver->deactivate();
+            } catch (Throwable) {
+                // a failure in one driver must not affect routing on the others.
+            }
+        }
+
         $key = $this->strategy->resolve();
         if ($key === null) {
             return [];
@@ -91,7 +96,7 @@ final class Plenum
                 $driver->activate($node);
                 $activated[$name] = $node;
             } catch (Throwable) {
-                // Per spec §12 #8: a failure in one driver must not affect routing on the others.
+                // a failure in one driver must not affect routing on the others.
             }
         }
 

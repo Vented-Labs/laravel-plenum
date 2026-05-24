@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vented\Plenum\Http\Controllers;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Throwable;
 use Vented\Plenum\Contracts\HealthChecker;
@@ -12,8 +13,12 @@ use Vented\Plenum\Plenum;
 
 final class DashboardController
 {
-    public function __invoke(Plenum $plenum, HealthChecker $health, ConfigRepository $config): View
-    {
+    public function __invoke(
+        Plenum $plenum,
+        HealthChecker $health,
+        ConfigRepository $config,
+        ViewFactory $views,
+    ): View {
         $samples = max(0, (int) $config->get('plenum.dashboard.distribution_samples', 1000));
 
         $drivers = [];
@@ -34,7 +39,7 @@ final class DashboardController
             ];
         }
 
-        return view('plenum::dashboard', [
+        return $views->make('plenum::dashboard', [
             'strategy' => $plenum->strategy()->name(),
             'drivers' => $drivers,
             'samples' => $samples,

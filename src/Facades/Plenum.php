@@ -19,7 +19,6 @@ use Vented\Plenum\Drivers\RedisDriver;
  * @method static array<int, string> candidatesFor(string $driver, int|string $key, int $count = 2)
  * @method static mixed execute(string $driver, int|string $key, callable $callback)
  * @method static \Vented\Plenum\Contracts\RoutingStrategy strategy()
- * @method static \Vented\Plenum\Plenum setStrategy(\Vented\Plenum\Contracts\RoutingStrategy $strategy)
  * @method static \Vented\Plenum\Plenum registerDriver(\Vented\Plenum\Contracts\ConnectionDriver $driver, ?\Vented\Plenum\Contracts\HashRing $ring = null)
  * @method static array<string, \Vented\Plenum\Contracts\ConnectionDriver> drivers()
  * @method static \Vented\Plenum\Contracts\ConnectionDriver driver(string $name)

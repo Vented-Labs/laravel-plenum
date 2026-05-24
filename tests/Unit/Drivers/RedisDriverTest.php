@@ -53,6 +53,33 @@ it('activate() binds the active node onto the container', function () {
     expect($container->make(RedisDriver::ACTIVE_BINDING))->toBe('redis_2');
 });
 
+it('deactivate() forgets the active node binding', function () {
+    $container = new Container();
+    $driver = new RedisDriver(
+        Mockery::mock(RedisFactory::class),
+        $container,
+        ['redis_1', 'redis_2'],
+    );
+
+    $driver->activate('redis_2');
+    $driver->deactivate();
+
+    expect($container->bound(RedisDriver::ACTIVE_BINDING))->toBeFalse();
+});
+
+it('deactivate() is safe when nothing was ever activated', function () {
+    $container = new Container();
+    $driver = new RedisDriver(
+        Mockery::mock(RedisFactory::class),
+        $container,
+        ['redis_1'],
+    );
+
+    $driver->deactivate();
+
+    expect($container->bound(RedisDriver::ACTIVE_BINDING))->toBeFalse();
+});
+
 it('ping() calls ping on the resolved connection and returns true on success', function () {
     $connection = Mockery::mock(RedisConnection::class);
     $connection->shouldReceive('ping')->once()->andReturnTrue();

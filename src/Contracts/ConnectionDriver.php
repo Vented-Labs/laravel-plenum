@@ -30,6 +30,16 @@ interface ConnectionDriver
     public function activate(string $node): void;
 
     /**
+     * Reset whatever state activate() mutated back to its pre-Plenum baseline.
+     *
+     * Called once per routing cycle (before any new activation) so that
+     * long-lived workers (Octane, FrankenPHP, RoadRunner) don't carry an
+     * earlier request's pinned connection into a later one. Implementations
+     * must be safe to call when no activate() has happened yet.
+     */
+    public function deactivate(): void;
+
+    /**
      * Cheap health check. Must return true if healthy, false otherwise.
      * Implementations MUST NOT throw — translate exceptions into a false return.
      */

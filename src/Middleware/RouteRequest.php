@@ -10,6 +10,16 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Vented\Plenum\Plenum;
 
+/**
+ * Drives one routing cycle per HTTP request. Under long-lived workers
+ * (Octane / FrankenPHP / RoadRunner) every routed connection lives only for
+ * the request that activated it — entering this middleware deactivates the
+ * previous request's pins before resolving new ones.
+ *
+ * Any route group that touches a Plenum-routed driver must therefore include
+ * this middleware. Routes that bypass it inherit whatever connection the most
+ * recent routed request left in place on the worker.
+ */
 final class RouteRequest
 {
     public function __construct(

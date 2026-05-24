@@ -36,6 +36,11 @@ final class NullDriver implements ConnectionDriver
         // intentionally empty — used for graceful partial-rollout
     }
 
+    public function deactivate(): void
+    {
+        // intentionally empty — NullDriver mutates no state to reset.
+    }
+
     public function ping(string $node): bool
     {
         return true;

@@ -48,14 +48,10 @@ function makeDriver(
 
 // --- strategy + driver accessors --------------------------------------------
 
-it('exposes its strategy and supports replacing it', function () {
+it('exposes its strategy', function () {
     [$plenum] = makePlenum(new CallbackStrategy(fn () => 'a', 'first'));
 
     expect($plenum->strategy()->name())->toBe('first');
-
-    $plenum->setStrategy(new CallbackStrategy(fn () => 'b', 'second'));
-
-    expect($plenum->strategy()->name())->toBe('second');
 });
 
 it('starts with no drivers and accumulates them via registerDriver', function () {
@@ -88,6 +84,47 @@ it('returns empty when the strategy yields no key', function () {
     $plenum->registerDriver($driver);
 
     expect($plenum->routeCurrentRequest())->toBe([]);
+});
+
+it('deactivates every driver at the start of routeCurrentRequest', function () {
+    [$plenum] = makePlenum();
+    $driver = makeDriver(['n1', 'n2'], 'database');
+    $driver->shouldReceive('deactivate')->once();
+    $driver->shouldReceive('activate')->once();
+    $plenum->registerDriver($driver);
+
+    $plenum->routeCurrentRequest();
+});
+
+it('deactivates drivers even when the strategy yields no key', function () {
+    [$plenum] = makePlenum(new CallbackStrategy(fn () => null));
+    $driver = makeDriver();
+    $driver->shouldReceive('deactivate')->once();
+    $driver->shouldNotReceive('activate');
+    $plenum->registerDriver($driver);
+
+    expect($plenum->routeCurrentRequest())->toBe([]);
+});
+
+it('isolates per-driver deactivate failures so other drivers still route', function () {
+    [$plenum] = makePlenum();
+
+    $broken = Mockery::mock(ConnectionDriver::class);
+    $broken->shouldReceive('name')->andReturn('database');
+    $broken->shouldReceive('nodes')->andReturn(['db_1']);
+    $broken->shouldReceive('failoverExceptions')->andReturn([]);
+    $broken->shouldReceive('deactivate')->once()->andThrow(new RuntimeException('reset blew up'));
+    $broken->shouldReceive('activate')->once();
+    $plenum->registerDriver($broken);
+
+    $redis = makeDriver(['r_1', 'r_2'], 'redis');
+    $redis->shouldReceive('deactivate')->once();
+    $redis->shouldReceive('activate')->once();
+    $plenum->registerDriver($redis);
+
+    $result = $plenum->routeCurrentRequest();
+
+    expect($result)->toHaveKey('redis');
 });
 
 it('returns empty when no drivers are registered', function () {

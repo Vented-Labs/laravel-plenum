@@ -32,3 +32,11 @@ it('activate() is a no-op and ping() always returns true', function () {
 
     expect($driver->ping('whatever'))->toBeTrue();
 });
+
+it('deactivate() is a no-op', function () {
+    $driver = new NullDriver();
+
+    $driver->deactivate();
+
+    expect($driver->ping('whatever'))->toBeTrue();
+});

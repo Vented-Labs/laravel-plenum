@@ -9,11 +9,21 @@ use Vented\Plenum\Drivers\DatabaseDriver;
 
 afterEach(fn () => Mockery::close());
 
-it('exposes its configured name and nodes', function () {
-    $db = Mockery::mock(DatabaseManager::class);
+function stubbedConfig(?string $default = 'main'): ConfigRepository
+{
     $config = Mockery::mock(ConfigRepository::class);
+    $config->shouldReceive('get')->with('database.default')->andReturn($default);
 
-    $driver = new DatabaseDriver($db, $config, ['db_1', 'db_2'], 'pgedge');
+    return $config;
+}
+
+it('exposes its configured name and nodes', function () {
+    $driver = new DatabaseDriver(
+        Mockery::mock(DatabaseManager::class),
+        stubbedConfig(),
+        ['db_1', 'db_2'],
+        'pgedge',
+    );
 
     expect($driver->name())->toBe('pgedge')
         ->and($driver->nodes())->toBe(['db_1', 'db_2']);
@@ -22,7 +32,7 @@ it('exposes its configured name and nodes', function () {
 it('defaults the name to "database"', function () {
     $driver = new DatabaseDriver(
         Mockery::mock(DatabaseManager::class),
-        Mockery::mock(ConfigRepository::class),
+        stubbedConfig(),
         ['db_1'],
     );
 
@@ -32,7 +42,7 @@ it('defaults the name to "database"', function () {
 it('reindexes the node list', function () {
     $driver = new DatabaseDriver(
         Mockery::mock(DatabaseManager::class),
-        Mockery::mock(ConfigRepository::class),
+        stubbedConfig(),
         [5 => 'db_1', 7 => 'db_2'],
     );
 
@@ -44,9 +54,54 @@ it('activate() sets the default connection and updates config', function () {
     $db->shouldReceive('setDefaultConnection')->with('db_2')->once();
 
     $config = Mockery::mock(ConfigRepository::class);
+    $config->shouldReceive('get')->with('database.default')->andReturn('main');
     $config->shouldReceive('set')->with('database.default', 'db_2')->once();
 
     (new DatabaseDriver($db, $config, ['db_1', 'db_2']))->activate('db_2');
+});
+
+it('deactivate() restores the boot-time default connection and config', function () {
+    $db = Mockery::mock(DatabaseManager::class);
+    $config = Mockery::mock(ConfigRepository::class);
+    $config->shouldReceive('get')->with('database.default')->once()->andReturn('main');
+
+    $driver = new DatabaseDriver($db, $config, ['db_1', 'db_2']);
+
+    $db->shouldReceive('setDefaultConnection')->with('main')->once();
+    $config->shouldReceive('set')->with('database.default', 'main')->once();
+
+    $driver->deactivate();
+});
+
+it('deactivate() skips setDefaultConnection when there was no default at boot', function () {
+    $db = Mockery::mock(DatabaseManager::class);
+    $config = Mockery::mock(ConfigRepository::class);
+    $config->shouldReceive('get')->with('database.default')->once()->andReturn(null);
+
+    $driver = new DatabaseDriver($db, $config, ['db_1']);
+
+    $db->shouldNotReceive('setDefaultConnection');
+    $config->shouldReceive('set')->with('database.default', null)->once();
+
+    $driver->deactivate();
+});
+
+it('deactivate() restores the baseline even after activate() has run', function () {
+    $db = Mockery::mock(DatabaseManager::class);
+    $config = Mockery::mock(ConfigRepository::class);
+    $config->shouldReceive('get')->with('database.default')->once()->andReturn('main');
+
+    $driver = new DatabaseDriver($db, $config, ['db_1', 'db_2']);
+
+    // First the request routes...
+    $db->shouldReceive('setDefaultConnection')->with('db_2')->once();
+    $config->shouldReceive('set')->with('database.default', 'db_2')->once();
+    $driver->activate('db_2');
+
+    // ...then the next routing cycle resets us to the baseline captured at boot.
+    $db->shouldReceive('setDefaultConnection')->with('main')->once();
+    $config->shouldReceive('set')->with('database.default', 'main')->once();
+    $driver->deactivate();
 });
 
 it('ping() runs select 1 against the connection and returns true on success', function () {
@@ -57,7 +112,7 @@ it('ping() runs select 1 against the connection and returns true on success', fu
     $db->shouldReceive('connection')->with('db_1')->andReturn($connection);
     $db->shouldNotReceive('purge');
 
-    $driver = new DatabaseDriver($db, Mockery::mock(ConfigRepository::class), ['db_1']);
+    $driver = new DatabaseDriver($db, stubbedConfig(), ['db_1']);
 
     expect($driver->ping('db_1'))->toBeTrue();
 });
@@ -70,7 +125,7 @@ it('ping() returns false and purges the connection when select throws', function
     $db->shouldReceive('connection')->with('db_1')->andReturn($connection);
     $db->shouldReceive('purge')->with('db_1')->once();
 
-    $driver = new DatabaseDriver($db, Mockery::mock(ConfigRepository::class), ['db_1']);
+    $driver = new DatabaseDriver($db, stubbedConfig(), ['db_1']);
 
     expect($driver->ping('db_1'))->toBeFalse();
 });
@@ -80,7 +135,7 @@ it('ping() returns false when resolving the connection throws', function () {
     $db->shouldReceive('connection')->andThrow(new RuntimeException('no such connection'));
     $db->shouldReceive('purge')->with('db_1')->once();
 
-    $driver = new DatabaseDriver($db, Mockery::mock(ConfigRepository::class), ['db_1']);
+    $driver = new DatabaseDriver($db, stubbedConfig(), ['db_1']);
 
     expect($driver->ping('db_1'))->toBeFalse();
 });
@@ -88,7 +143,7 @@ it('ping() returns false when resolving the connection throws', function () {
 it('declares PDOException as its failover exception', function () {
     $driver = new DatabaseDriver(
         Mockery::mock(DatabaseManager::class),
-        Mockery::mock(ConfigRepository::class),
+        stubbedConfig(),
         ['db_1'],
     );
 

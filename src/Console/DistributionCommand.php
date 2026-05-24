@@ -21,7 +21,8 @@ class DistributionCommand extends Command
     public function handle(Plenum $plenum): int
     {
         $samples = max(0, (int) $this->option('samples'));
-        $prefix = (string) $this->option('prefix');
+        $prefixOption = $this->option('prefix');
+        $prefix = is_string($prefixOption) ? $prefixOption : 'sample';
 
         $drivers = $this->selectedDrivers($plenum);
         if ($drivers === []) {
@@ -45,11 +46,11 @@ class DistributionCommand extends Command
     private function selectedDrivers(Plenum $plenum): array
     {
         $requested = $this->argument('driver');
-        if ($requested === null) {
+        if (! is_string($requested)) {
             return $plenum->drivers();
         }
 
-        return [(string) $requested => $plenum->driver((string) $requested)];
+        return [$requested => $plenum->driver($requested)];
     }
 
     private function renderDistribution(Plenum $plenum, string $name, ConnectionDriver $driver, int $samples, string $prefix): void

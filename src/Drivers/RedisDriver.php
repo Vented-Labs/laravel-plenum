@@ -43,6 +43,11 @@ final class RedisDriver implements ConnectionDriver
         $this->container->instance(self::ACTIVE_BINDING, $node);
     }
 
+    public function deactivate(): void
+    {
+        $this->container->forgetInstance(self::ACTIVE_BINDING);
+    }
+
     public function ping(string $node): bool
     {
         try {

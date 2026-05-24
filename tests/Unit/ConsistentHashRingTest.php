@@ -122,3 +122,23 @@ it('throws NoHealthyNodesException when listing candidates against empty ring', 
 it('starts empty so initial lookups also throw', function () {
     (new ConsistentHashRing())->lookup('k');
 })->throws(NoHealthyNodesException::class);
+
+it('does not rebuild the ring when setNodes is called with the same set', function () {
+    $ring = new ConsistentHashRing();
+    $ring->setNodes(['n1', 'n2', 'n3']);
+
+    $property = new ReflectionProperty($ring, 'ring');
+    $initial = $property->getValue($ring);
+
+    // Identical input — should short-circuit, ring instance unchanged.
+    $ring->setNodes(['n1', 'n2', 'n3']);
+    expect($property->getValue($ring))->toBe($initial);
+
+    // Same set after dedup+sort — also short-circuits.
+    $ring->setNodes(['n3', 'n1', 'n2', 'n1']);
+    expect($property->getValue($ring))->toBe($initial);
+
+    // A real change rebuilds the ring.
+    $ring->setNodes(['n1', 'n2']);
+    expect($property->getValue($ring))->not->toBe($initial);
+});
