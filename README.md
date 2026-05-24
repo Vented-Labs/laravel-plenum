@@ -18,7 +18,7 @@ Load-balancer sticky sessions don't solve this: the same user on two devices nee
 
 ## Requirements
 
-- PHP 8.3+
+- PHP 8.4+
 - Laravel 13+
 - A cache store (used to share health state across workers)
 
@@ -72,11 +72,25 @@ Plenum::redis()->set('cache:key', 'value');
 
 A strategy answers one question: *given the current request, what's the routing key?* Plenum ships five built-ins:
 
-- `auth-user` — `auth()->id()`, falling back to session ID for guests
+- `auth-user` — `auth()->id()` (returns `null` for guests; wrap with `composite` if you need a session fallback)
 - `session-only` — session ID always
-- `tenant` — reads from a configurable tenant resolver, useful with `stancl/tenancy` or similar
-- `callback` — a closure registered at boot time
+- `tenant` — wraps a closure that returns your tenant identifier, useful with `stancl/tenancy` or similar
+- `callback` — a closure registered at boot time, with a custom name for the `X-Plenum-Strategy` header
 - `composite` — tries strategies in order until one returns a non-null key
+
+To get the README's original "auth, falling back to session" behaviour, bind a composite:
+
+```php
+use Vented\Plenum\Contracts\RoutingStrategy;
+use Vented\Plenum\Strategies\AuthUserStrategy;
+use Vented\Plenum\Strategies\CompositeStrategy;
+use Vented\Plenum\Strategies\SessionOnlyStrategy;
+
+$this->app->singleton(RoutingStrategy::class, fn ($app) => new CompositeStrategy(
+    $app->make(AuthUserStrategy::class),
+    $app->make(SessionOnlyStrategy::class),
+));
+```
 
 Set the active strategy via `PLENUM_STRATEGY` or by binding your own:
 
@@ -116,7 +130,17 @@ Tenant 42 will land on `db_2` *and* `redis_2` (or whichever pair the hash ring a
 
 ## Health checks and failover
 
-The default `PingHealthChecker` delegates to each driver: a `SELECT 1` for database nodes, `PING` for Redis. Results are cached briefly (10s for healthy, 30s for down by default) so you're not pinging on every request. A scheduled `plenum:probe` command runs every 10s in the background, refreshing the cached state.
+The default `PingHealthChecker` delegates to each driver: a `SELECT 1` for database nodes, `PING` for Redis. Results are cached briefly (10s for healthy, 30s for down by default) so you're not pinging on every request.
+
+Plenum ships a `plenum:probe` command but does not schedule it for you. Wire it into Laravel's scheduler so the cached state stays fresh — e.g. in `routes/console.php` (Laravel 11+):
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('plenum:probe')->everyTenSeconds();
+```
+
+Or, in long-lived environments like supervisord, run `php artisan plenum:probe --watch` as a daemon.
 
 When a node fails, Plenum dispatches `NodeMarkedDown` and the ring rehashes around the survivors. When it comes back, `NodeRecovered` fires. The `Plenum::execute()` helper wraps an operation with automatic retry-on-different-node behaviour and dispatches `FailoverOccurred` when it kicks in.
 
@@ -150,15 +174,24 @@ Bind it in a service provider and Plenum will use it instead of the default.
 
 ## Background jobs and queue workers
 
-Queue jobs don't carry an HTTP request, so the auth-user or session strategies have nothing to resolve. Pass the routing key explicitly:
+Queue jobs don't carry an HTTP request, so the auth-user or session strategies have nothing to resolve. Pass the routing key into the job's constructor and route from inside `handle()`:
 
 ```php
-ProcessProjectReport::dispatch($project)->onConnection(
-    Plenum::nodeFor('database', $project->id)
-);
+final class ProcessProjectReport implements ShouldQueue
+{
+    public function __construct(public readonly int $projectId) {}
+
+    public function handle(): void
+    {
+        Plenum::execute('database', $this->projectId, function () {
+            // All Eloquent / DB:: calls in here go to the routed node,
+            // and a failover candidate is tried automatically if it fails.
+        });
+    }
+}
 ```
 
-Or wrap the job body in `Plenum::execute()` and supply the key directly.
+`Plenum::execute()` is the recommended entry point for any work that should be retried on the next healthy node on a connection-level failure.
 
 ## Debugging
 
