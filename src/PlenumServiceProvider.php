@@ -16,6 +16,7 @@ use Illuminate\Contracts\Redis\Factory as RedisFactory;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Vented\Plenum\Console\DiagnoseCommand;
@@ -28,6 +29,8 @@ use Vented\Plenum\Drivers\DatabaseDriver;
 use Vented\Plenum\Drivers\RedisDriver;
 use Vented\Plenum\Exceptions\ConfigurationException;
 use Vented\Plenum\Health\PingHealthChecker;
+use Vented\Plenum\Http\Controllers\DashboardController;
+use Vented\Plenum\Http\Middleware\Authorize;
 use Vented\Plenum\Middleware\RouteRequest;
 use Vented\Plenum\Strategies\AuthUserStrategy;
 use Vented\Plenum\Strategies\SessionOnlyStrategy;
@@ -39,6 +42,7 @@ class PlenumServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-plenum')
             ->hasConfigFile()
+            ->hasViews('plenum')
             ->hasCommands([
                 DiagnoseCommand::class,
                 DistributionCommand::class,
@@ -60,6 +64,7 @@ class PlenumServiceProvider extends PackageServiceProvider
     public function packageBooted(): void
     {
         $this->maybeRegisterMiddleware();
+        $this->maybeRegisterDashboard();
     }
 
     private function registerHealthChecker(): void
@@ -242,5 +247,45 @@ class PlenumServiceProvider extends PackageServiceProvider
         foreach ((array) $config->get('plenum.middleware.groups', ['web', 'api']) as $group) {
             $router->pushMiddlewareToGroup((string) $group, RouteRequest::class);
         }
+    }
+
+    /**
+     * @throws BindingResolutionException
+     */
+    private function maybeRegisterDashboard(): void
+    {
+        if (! $this->app->bound(HttpKernel::class)) {
+            return;
+        }
+
+        $config = $this->app->make(ConfigRepository::class);
+        $enabled = $config->get('plenum.dashboard.enabled');
+
+        if ($enabled === null) {
+            $enabled = $this->app->environment('local');
+        }
+
+        if (! $enabled) {
+            return;
+        }
+
+        $middleware = array_merge(
+            (array) $config->get('plenum.dashboard.middleware', ['web']),
+            [Authorize::class],
+        );
+
+        $attributes = [
+            'prefix' => (string) $config->get('plenum.dashboard.path', 'plenum'),
+            'middleware' => $middleware,
+        ];
+
+        $domain = $config->get('plenum.dashboard.domain');
+        if ($domain !== null && $domain !== '') {
+            $attributes['domain'] = (string) $domain;
+        }
+
+        Route::group($attributes, function (): void {
+            Route::get('/', DashboardController::class)->name('plenum.dashboard');
+        });
     }
 }

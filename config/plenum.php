@@ -66,4 +66,14 @@ return [
 
     'expose_debug_header' => (bool) env('PLENUM_EXPOSE_DEBUG_HEADER', false),
 
+    'dashboard' => [
+        // null = auto: enabled when app is in the local environment.
+        // true/false = explicit override.
+        'enabled' => env('PLENUM_DASHBOARD_ENABLED'),
+        'path' => env('PLENUM_DASHBOARD_PATH', 'plenum'),
+        'domain' => env('PLENUM_DASHBOARD_DOMAIN'),
+        'middleware' => ['web'],
+        'distribution_samples' => (int) env('PLENUM_DASHBOARD_SAMPLES', 1000),
+    ],
+
 ];

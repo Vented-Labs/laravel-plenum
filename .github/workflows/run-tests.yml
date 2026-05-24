@@ -2,7 +2,7 @@ name: tests
 
 on:
   push:
-    branches: [main, master]
+    branches: [master]
     paths:
       - '**.php'
       - '.github/workflows/run-tests.yml'

@@ -53,13 +53,6 @@ abstract class IntegrationCase extends TestCase
         return $this->app->make(Plenum::class);
     }
 
-    protected function defineEnvironment($app): void
-    {
-        // Sessions / encrypted cookies require an APP_KEY. Orchestra leaves it blank
-        // by default; set one so end-to-end HTTP tests can run the session middleware.
-        $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
-    }
-
     /** @param  array<string, mixed>  $values */
     protected function setConfig(array $values): void
     {

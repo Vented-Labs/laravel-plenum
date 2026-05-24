@@ -14,6 +14,14 @@ Initial **experimental** release. Public API, configuration keys, and runtime
 behaviour may change without notice between 0.x point releases.
 
 ### Added
+- Optional `/plenum` status dashboard that visualises strategy, driver/node
+  health, and key distribution. Auto-enabled in `local`; opt in elsewhere with
+  `PLENUM_DASHBOARD_ENABLED=true`. Greyscale UI styled with a bundled
+  Tailwind-built stylesheet (no Tailwind shipped at runtime).
+- `Plenum::auth()` callback for gating dashboard access, matching Laravel
+  Horizon / Pulse conventions. Defaults to allow-in-local, deny-elsewhere.
+- `PLENUM_DASHBOARD_PATH`, `PLENUM_DASHBOARD_DOMAIN`, and
+  `PLENUM_DASHBOARD_SAMPLES` env vars for the dashboard route.
 - Consistent-hash router (`Plenum`) that maps a per-request routing key onto a
   pool of healthy backend connections.
 - `RoutingStrategy` contract with five built-in strategies: `AuthUserStrategy`,

@@ -1,0 +1,53 @@
+name: assets
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'resources/css/**'
+      - 'resources/views/**'
+      - 'dist/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/assets.yml'
+  pull_request:
+    paths:
+      - 'resources/css/**'
+      - 'resources/views/**'
+      - 'dist/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/assets.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and verify dist
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install npm dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build dashboard CSS
+        run: npm run build
+
+      - name: Verify committed dist/ matches build output
+        run: |
+          if ! git diff --exit-code --stat -- dist/; then
+            echo ""
+            echo "::error::dist/ is out of date. Run 'npm run build' locally and commit the result."
+            exit 1
+          fi

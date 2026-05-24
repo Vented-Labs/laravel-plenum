@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Vented\Plenum\Facades;
 
+use Closure;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
+use Illuminate\Http\Request;
 use Illuminate\Redis\Connections\Connection;
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\HtmlString;
 use RuntimeException;
 use Vented\Plenum\Drivers\RedisDriver;
 
@@ -25,6 +28,9 @@ use Vented\Plenum\Drivers\RedisDriver;
  */
 class Plenum extends Facade
 {
+    /** @var (Closure(Request): bool)|null */
+    public static ?Closure $authUsing = null;
+
     /**
      * Resolve the Redis connection that the active routing decision points at.
      */
@@ -42,6 +48,44 @@ class Plenum extends Facade
         $node = (string) $app->make(RedisDriver::ACTIVE_BINDING);
 
         return $app->make(RedisFactory::class)->connection($node);
+    }
+
+    /**
+     * Register a callback used to authorise dashboard requests. The callback
+     * receives the inbound Request and must return true to allow access.
+     *
+     * @param  Closure(Request): bool  $callback
+     */
+    public static function auth(Closure $callback): void
+    {
+        static::$authUsing = $callback;
+    }
+
+    /**
+     * Decide whether the given request may access the dashboard. Defaults to
+     * "allowed in local, denied everywhere else" when no callback is set.
+     */
+    public static function check(Request $request): bool
+    {
+        $callback = static::$authUsing ?? static function (Request $request): bool {
+            $app = static::getFacadeApplication();
+
+            return $app !== null && $app->environment('local');
+        };
+
+        return $callback($request);
+    }
+
+    /**
+     * Inline the bundled dashboard stylesheet so the Blade layout can embed
+     * it without a separate HTTP request or vendor:publish step.
+     */
+    public static function css(): HtmlString
+    {
+        $path = __DIR__.'/../../dist/plenum.css';
+        $css = is_file($path) ? (string) file_get_contents($path) : '';
+
+        return new HtmlString('<style>'.$css.'</style>');
     }
 
     protected static function getFacadeAccessor(): string

@@ -283,6 +283,23 @@ it('maybeRegisterMiddleware returns early when no HTTP Kernel is bound', functio
     expect($router->getMiddlewareGroups())->toBe($before);
 });
 
+it('maybeRegisterDashboard returns early when no HTTP Kernel is bound', function () {
+    setPlenumConfig($this->app, ['plenum.dashboard.enabled' => true]);
+
+    $this->app->forgetInstance(HttpKernel::class);
+    unset($this->app[HttpKernel::class]);
+    $this->app->bind(HttpKernel::class, fn () => throw new RuntimeException('should not be resolved'));
+    $this->app->offsetUnset(HttpKernel::class);
+
+    $provider = $this->app->getProvider(PlenumServiceProvider::class);
+    $method = new ReflectionMethod($provider, 'maybeRegisterDashboard');
+
+    // No exception is the assertion — the early return short-circuits route registration.
+    $method->invoke($provider);
+
+    expect(true)->toBeTrue();
+});
+
 it('produces a usable plenum singleton with realistic configuration', function () {
     setPlenumConfig($this->app, [
         'plenum.drivers.database.nodes' => [

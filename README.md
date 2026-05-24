@@ -10,6 +10,10 @@
 
 Application-layer routing for Laravel. Pin requests to specific backing connections — databases, Redis nodes, or any custom resource Laravel can address by connection name — using consistent hashing, with pluggable routing-key strategies, active health monitoring, and automatic failover.
 
+<p align="center">
+    <img src="art/dashboard.png" alt="Plenum dashboard showing per-driver node health and key distribution, with light mode on the left and dark mode on the right." width="100%">
+</p>
+
 ## What and why
 
 When you run a pool of interchangeable backends — a multi-master Postgres cluster, a Redis deployment, an application-sharded service — you usually want a stable mapping from some logical identity (user, tenant, project, session) to a specific backend, so replication can catch up or cache locality holds.
@@ -209,6 +213,39 @@ Listen to the events to wire up alerting:
 Event::listen(NodeMarkedDown::class, fn ($e) => Slack::alert(
     "{$e->driver} node {$e->node} marked down: {$e->reason}"
 ));
+```
+
+### Dashboard
+
+Plenum ships a small read-only status page that visualises the same information as `plenum:diagnose` and `plenum:distribution` in a browser. It's mounted at `/plenum` and is **enabled by default in `local`** only — production and staging serve a 404 unless you opt in.
+
+To expose it outside local, set the env var and register an auth gate:
+
+```dotenv
+PLENUM_DASHBOARD_ENABLED=true
+```
+
+```php
+// In a service provider's boot() method
+use Vented\Plenum\Facades\Plenum;
+
+Plenum::auth(fn ($request) => $request->user()?->can('viewPlenum') ?? false);
+```
+
+Without a custom gate, non-local requests return 403. The callback receives the inbound `Request` and must return `true` to allow access.
+
+Configurable via env:
+
+```dotenv
+PLENUM_DASHBOARD_PATH=admin/plenum        # default: plenum
+PLENUM_DASHBOARD_DOMAIN=admin.example.com # optional
+PLENUM_DASHBOARD_SAMPLES=1000             # distribution sample count
+```
+
+The page ships its own bundled stylesheet inline — no asset publishing required. If you want to theme it, publish the view and edit it directly:
+
+```bash
+php artisan vendor:publish --tag="plenum-views"
 ```
 
 ## Operational notes

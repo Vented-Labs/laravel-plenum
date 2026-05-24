@@ -17,6 +17,19 @@ If you do send a PR:
 - Add or update tests for behaviour changes.
 - Write a clear description of what changed and why.
 
+## Dashboard assets
+
+The dashboard's CSS is built from `resources/css/plenum.css` using the Tailwind v4 standalone CLI. The compiled artifact lives at `dist/plenum.css` and is committed to the repository — end users get the prebuilt file, no `npm install` required.
+
+If you change anything in `resources/views/` or `resources/css/`, rebuild before opening a PR:
+
+```bash
+npm install      # one-time
+npm run build    # produces dist/plenum.css
+```
+
+`npm run watch` rebuilds on save during development.
+
 ## Security
 
 Do **not** open public issues for security vulnerabilities. See [SECURITY.md](SECURITY.md) for the disclosure process.

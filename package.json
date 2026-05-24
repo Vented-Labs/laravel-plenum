@@ -1,0 +1,14 @@
+{
+  "name": "laravel-plenum",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Build pipeline for the Plenum dashboard stylesheet.",
+  "scripts": {
+    "build": "tailwindcss -i ./resources/css/plenum.css -o ./dist/plenum.css --minify",
+    "watch": "tailwindcss -i ./resources/css/plenum.css -o ./dist/plenum.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
