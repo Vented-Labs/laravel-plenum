@@ -17,6 +17,7 @@ return (new PhpCsFixer\Config())
         'global_namespace_import' => ['import_classes' => true, 'import_functions' => false],
         'no_unused_imports' => true,
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
+        'single_line_empty_body' => true,
         'single_quote' => true,
         'trailing_comma_in_multiline' => true,
     ])

@@ -6,7 +6,6 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Http\Kernel as HttpKernel;
 use Illuminate\Routing\Router;
-use Vented\Plenum\Contracts\ConnectionDriver;
 use Vented\Plenum\Contracts\HealthChecker;
 use Vented\Plenum\Contracts\RoutingStrategy;
 use Vented\Plenum\Drivers\DatabaseDriver;

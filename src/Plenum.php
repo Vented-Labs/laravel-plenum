@@ -186,6 +186,6 @@ final class Plenum
      */
     private static function matchesFailover(Throwable $e, array $failoverExceptions): bool
     {
-        return array_any($failoverExceptions, fn($class) => $e instanceof $class);
+        return array_any($failoverExceptions, fn ($class) => $e instanceof $class);
     }
 }

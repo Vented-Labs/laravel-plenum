@@ -138,7 +138,7 @@ it('TenantStrategy returns null for empty string', function () {
 });
 
 it('TenantStrategy returns null for unsupported types', function () {
-    expect((new TenantStrategy(fn () => new stdClass))->resolve())->toBeNull();
+    expect((new TenantStrategy(fn () => new stdClass()))->resolve())->toBeNull();
 });
 
 it('TenantStrategy swallows resolver exceptions', function () {
